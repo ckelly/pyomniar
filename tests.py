@@ -10,6 +10,11 @@ from pyomniar import *
 api_key = ''
 account_key = ''
 
+try:
+    from test_settings import *
+except ImportError:
+    pass
+
 class PyomniarAPITests(unittest.TestCase):
     def setUp(self):
         self.api = API(KeyAuthHandler(api_key=api_key, account_key=account_key))
