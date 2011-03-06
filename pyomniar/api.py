@@ -3,11 +3,10 @@
 # See LICENSE for details.
 
 import os
-import mimetypes
 
 from pyomniar.binder import bind_api
 from pyomniar.parsers import JSONParser
-from pyomniar.utils import import_simplejson
+from pyomniar.utils import import_simplejson, encode_multipart_formdata, build_postdata_tup, build_file_tup
 json = import_simplejson()
 
 class API(object):
@@ -32,63 +31,45 @@ class API(object):
         allowed_param = []
     )
     
-    # post_scans
-    
+    # get_scans
     get_scans = bind_api(
         path = '/accounts/{account_key}/scans',
         allowed_param = []
     )
     
+    # get single scan
     get_single_scan = bind_api(
-        path = '/accounts/{account_key}/scans/{scan_uuid}',
+        path = '/accounts/{account_key}/scans/{scan_id}',
         allowed_param = ['scan_uuid']
     )
     
+    # post scans
+    def post_scans(self, filename, name=None, content=None):
+        meta = {}
+        if name:
+            meta['name'] = name
+        if content:
+            meta['content'] = content
+        form_meta = build_postdata_tup(json.dumps(meta), 'json')
+        
+        files = build_file_tup(filename, 'scanFile')
+        
+        headers, post_data = encode_multipart_formdata(form_meta, files)
+        return bind_api(
+            path = '/accounts/{account_key}/scans',
+            method = 'POST',
+        )(self, post_data=post_data, headers=headers)
+    
+    # update scan
     update_scan = bind_api(
-        path = '/accounts/{account_key}/scans/{scan_uuid}',
+        path = '/accounts/{account_key}/scans/{scan_id}',
         method = 'PUT',
-        allowed_param = ['scan_uuid']
+        allowed_param = ['scan_id', 'name', 'content']
     )
     
-    """ Internal use only """
-    @staticmethod
-    def _pack_file(filename, max_size):
-        """Pack image from file into multipart-formdata post body"""
-        # image must be less than 700kb in size
-        try:
-            if os.path.getsize(filename) > (max_size * 1024):
-                raise OmniarError('File is too big, must be less than 700kb.')
-        except os.error, e:
-            raise OmniarError('Unable to access file')
-
-        # image must be gif, jpeg, or png
-        file_type = mimetypes.guess_type(filename)
-        if file_type is None:
-            raise OmniarError('Could not determine file type')
-        file_type = file_type[0]
-        if file_type not in ['image/gif', 'image/jpeg', 'image/png']:
-            raise OmniarError('Invalid file type for image: %s' % file_type)
-
-        # build the mulitpart-formdata body
-        fp = open(filename, 'rb')
-        BOUNDARY = 'Tw3ePy'
-        body = []
-        body.append('--' + BOUNDARY)
-        body.append('Content-Disposition: form-data; name="image"; filename="%s"' % filename)
-        body.append('Content-Type: %s' % file_type)
-        body.append('')
-        body.append(fp.read())
-        body.append('--' + BOUNDARY + '--')
-        body.append('')
-        fp.close()
-        body = '\r\n'.join(body)
-
-        # build headers
-        headers = {
-            'Content-Type': 'multipart/form-data; boundary=Tw3ePy',
-            'Content-Length': len(body)
-        }
-
-        return headers, body
-    
+    delete_scan = bind_api(
+        path = '/accounts/{account_key}/scans/{scan_id}',
+        method = 'DELETE',
+        allowed_param = ['scan_id']
+    )
     
