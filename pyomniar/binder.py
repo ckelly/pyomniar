@@ -23,6 +23,8 @@ def bind_api(**config):
         def __init__(self, api, args, kargs):
 
             self.api = api
+            self.parser = kargs.pop('parser', self.api.parser)
+            
             self.post_data = kargs.pop('post_data', None)
             self.retry_count = kargs.pop('retry_count', api.retry_count)
             self.retry_delay = kargs.pop('retry_delay', api.retry_delay)
@@ -130,13 +132,13 @@ def bind_api(**config):
             self.api.last_response = resp
             if resp.status != 200:
                 try:
-                    error_msg = self.api.parser.parse_error(resp.read())
+                    error_msg = self.parser.parse_error(resp.read())
                 except Exception:
                     error_msg = "Omniar error response: status code = %s" % resp.status
                 raise OmniarError(error_msg, resp)
 
             # Parse the response payload
-            result = self.api.parser.parse(self, resp.read())
+            result = self.parser.parse(self, resp.read())
 
             conn.close()
             

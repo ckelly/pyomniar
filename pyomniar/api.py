@@ -5,9 +5,10 @@
 import os
 
 from pyomniar.binder import bind_api
-from pyomniar.parsers import JSONParser
+from pyomniar.parsers import JSONParser, EmptyParser
 from pyomniar.utils import import_simplejson, encode_multipart_formdata, build_postdata_tup, build_file_tup
 json = import_simplejson()
+
 
 class API(object):
     '''Omniar API'''
@@ -38,9 +39,9 @@ class API(object):
     )
     
     # get single scan
-    get_single_scan = bind_api(
+    get_scan = bind_api(
         path = '/accounts/{account_key}/scans/{scan_id}',
-        allowed_param = ['scan_uuid']
+        allowed_param = ['scan_id']
     )
     
     # post scans
@@ -59,17 +60,34 @@ class API(object):
             path = '/accounts/{account_key}/scans',
             method = 'POST',
         )(self, post_data=post_data, headers=headers)
+
+    # # update scan
+    # def update_scan(self, scan_id, name=None, content=None):
+    #     meta = {}
+    #     if name:
+    #         meta['name'] = name
+    #     if content:
+    #         meta['content'] = content
+    #     form_meta = build_postdata_tup(json.dumps(meta), 'json')
+    #     
+    #     headers, post_data = encode_multipart_formdata(form_meta, files=[])
+    #     return bind_api(
+    #         path = '/accounts/{account_key}/scans/{scan_id}',
+    #         method = 'PUT',
+    #         allowed_param = ['scan_id']
+    #     )(self, scan_id=scan_id, post_data=post_data, headers=headers)
     
-    # update scan
     update_scan = bind_api(
-        path = '/accounts/{account_key}/scans/{scan_id}',
-        method = 'PUT',
-        allowed_param = ['scan_id', 'name', 'content']
-    )
+            path = '/accounts/{account_key}/scans/{scan_id}',
+            method = 'PUT',
+            allowed_param = ['scan_id', 'name', 'content']
+        )
     
-    delete_scan = bind_api(
-        path = '/accounts/{account_key}/scans/{scan_id}',
-        method = 'DELETE',
-        allowed_param = ['scan_id']
-    )
+    def delete_scan(self, scan_id):
+        return bind_api(
+            path = '/accounts/{account_key}/scans/{scan_id}',
+            method = 'DELETE',
+            allowed_param = ['scan_id']
+        )(self, scan_id=scan_id, parser=EmptyParser())
+
     

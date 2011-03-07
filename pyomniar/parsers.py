@@ -42,3 +42,16 @@ class JSONParser(Parser):
             return error['error']
         else:
             return error['errors']
+            
+
+class EmptyParser(Parser):
+    """Parser for items that don't return any data"""
+
+    # def __init__(self):
+    #     pass
+
+    def parse(self, method, payload):
+        return True
+
+    def parse_error(self, payload):
+        return False
