@@ -61,27 +61,21 @@ class API(object):
             method = 'POST',
         )(self, post_data=post_data, headers=headers)
 
-    # # update scan
-    # def update_scan(self, scan_id, name=None, content=None):
-    #     meta = {}
-    #     if name:
-    #         meta['name'] = name
-    #     if content:
-    #         meta['content'] = content
-    #     form_meta = build_postdata_tup(json.dumps(meta), 'json')
-    #     
-    #     headers, post_data = encode_multipart_formdata(form_meta, files=[])
-    #     return bind_api(
-    #         path = '/accounts/{account_key}/scans/{scan_id}',
-    #         method = 'PUT',
-    #         allowed_param = ['scan_id']
-    #     )(self, scan_id=scan_id, post_data=post_data, headers=headers)
-    
-    update_scan = bind_api(
+    # update scan
+    def update_scan(self, scan_id, name=None, content=None):
+        meta = {}
+        if name:
+            meta['name'] = name
+        if content:
+            meta['content'] = content
+
+        post_data = json.dumps(meta)
+        return bind_api(
             path = '/accounts/{account_key}/scans/{scan_id}',
             method = 'PUT',
-            allowed_param = ['scan_id', 'name', 'content']
-        )
+            allowed_param = ['scan_id']
+        )(self, scan_id=scan_id, post_data=post_data)
+
     
     def delete_scan(self, scan_id):
         return bind_api(
@@ -90,4 +84,13 @@ class API(object):
             allowed_param = ['scan_id']
         )(self, scan_id=scan_id, parser=EmptyParser())
 
-    
+
+    def match(self, filename):
+        files = build_file_tup(filename, 'file')
+        headers, post_data = encode_multipart_formdata([], files)
+        
+        return bind_api(
+            path = '/accounts/{account_key}/match',
+            method = 'POST',
+        )(self, post_data=post_data, headers=headers)
+

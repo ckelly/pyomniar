@@ -38,10 +38,10 @@ class JSONParser(Parser):
 
     def parse_error(self, payload):
         error = self.json_lib.loads(payload)
-        if error.has_key('error'):
-            return error['error']
+        if error.has_key('error-reason'):
+            return error['error-reason']
         else:
-            return error['errors']
+            return error['error-code']
             
 
 class EmptyParser(Parser):
